@@ -35,11 +35,12 @@ public class LocalFileProducer implements Producer {
 
         try {
             // 读取通讯录数据
-            List<Contact> contacts = in.read(Contact.class);
-
+            List<Contact> contacts = in.read(Contact.class);// TODO: 2020/5/14 为啥要用class作为入参呢？  是为了通用性考虑
+//            System.out.println(contacts);
             while ( flg ) {
 
                 // 从通讯录中随机查找2个电话号码（主叫，被叫）
+                // TODO: 2020/5/14 尽量使用 Math.random，new Random().nextInt是写在源码中的，可能被获取到的
                 int call1Index = new Random().nextInt(contacts.size());
                 int call2Index;
                 while ( true ) {
@@ -61,10 +62,11 @@ public class LocalFileProducer implements Producer {
 
                 // 通话时间
                 long calltime = startTime + (long)((endTime - startTime) * Math.random());
-                // 通话时间字符串
+                // 通话时间字符串(通话建立的起始时间)
                 String callTimeString = DateUtil.format(new Date(calltime), "yyyyMMddHHmmss");
 
                 // 生成随机的通话时长
+                // TODO: 2020/5/14 要求生成固定长度的时长字符串，使用工具类来做 decimalFormat.format(num)
                 String duration = NumberUtil.format(new Random().nextInt(3000), 4);
 
                 // 生成通话记录

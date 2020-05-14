@@ -6,3 +6,4 @@
 /ct-consumer-coprocessor/target/
 /ct-producer/target/
 /ct-web/target/
+*.iml

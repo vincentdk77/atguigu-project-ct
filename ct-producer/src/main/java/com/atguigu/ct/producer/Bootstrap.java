@@ -19,8 +19,8 @@ public class Bootstrap {
         // 构建生产者对象
         Producer producer = new LocalFileProducer();
 
-//        producer.setIn(new LocalFileDataIn("E:\\bigdata\\course\\13_尚硅谷大数据技术之电信客服\\2.资料\\辅助文档\\contact.log"));
-//        producer.setOut(new LocalFileDataOut("E:\\bigdata\\course\\13_尚硅谷大数据技术之电信客服\\2.资料\\辅助文档\\call.log"));
+//        producer.setIn(new LocalFileDataIn("F:\\电信客服\\2.资料\\辅助文档\\contact.log"));
+//        producer.setOut(new LocalFileDataOut("F:\\电信客服\\2.资料\\辅助文档\\call.log"));
 
         producer.setIn(new LocalFileDataIn(args[0]));
         producer.setOut(new LocalFileDataOut(args[1]));

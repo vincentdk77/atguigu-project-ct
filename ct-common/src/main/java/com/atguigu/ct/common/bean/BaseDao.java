@@ -18,7 +18,7 @@ import java.util.*;
  * 基础数据访问对象
  */
 public abstract class BaseDao {
-
+    // TODO: 2020/5/14  ThreadLocal是什么鬼？有时间参考下谷粒微博项目？
     private ThreadLocal<Connection> connHolder = new ThreadLocal<Connection>();
     private ThreadLocal<Admin> adminHolder = new ThreadLocal<Admin>();
 
@@ -138,7 +138,7 @@ public abstract class BaseDao {
      * @return
      */
     protected int genRegionNum( String tel, String date ) {
-
+        // TODO: 2020/5/14 这里保证了一个电话的同一个年月的记录在一个分区内，提高后面查询的性能
         // 13301234567
         String usercode = tel.substring(tel.length()-4);
         // 20181010120000
