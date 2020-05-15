@@ -95,11 +95,24 @@ public abstract class BaseDao {
         }
     }
 
+    public static void main(String[] args){
+        for(String[] strings : getStartStorRowkeys("13696321501","201803","201808")){
+            System.out.println(strings[0]+"~"+strings[1]);
+            /**
+             *   3_13696321501_201803~3_13696321501_201803|
+                 2_13696321501_201804~2_13696321501_201804|
+                 5_13696321501_201805~5_13696321501_201805|
+                 4_13696321501_201806~4_13696321501_201806|
+                 5_13696321501_201807~5_13696321501_201807|
+                 4_13696321501_201808~4_13696321501_201808|
+             */
+        }
+    }
     /**
      * 获取查询时startrow, stoprow集合
      * @return
      */
-    protected List<String[]> getStartStorRowkeys( String tel, String start, String end ) {
+    protected static List<String[]> getStartStorRowkeys( String tel, String start, String end ) {
         List<String[]> rowkeyss = new ArrayList<String[]>();
 
         String startTime = start.substring(0, 6);
@@ -137,7 +150,7 @@ public abstract class BaseDao {
      * @param date
      * @return
      */
-    protected int genRegionNum( String tel, String date ) {
+    protected static int genRegionNum( String tel, String date ) {
         // TODO: 2020/5/14 这里保证了一个电话的同一个年月的记录在一个分区内，提高后面查询的性能
         // 13301234567
         String usercode = tel.substring(tel.length()-4);
@@ -172,8 +185,8 @@ public abstract class BaseDao {
             String splitkey = i + "|";
             bsList.add(Bytes.toBytes(splitkey));
         }
-
-        //Collections.sort(bsList, new Bytes.ByteArrayComparator());
+        // TODO: 2020/5/15 如果分区间不是1、2、3，那就需要先排序 ，可以使用hbase的比较器api
+         Collections.sort(bsList, new Bytes.ByteArrayComparator());
 
         bsList.toArray(bs);
 
