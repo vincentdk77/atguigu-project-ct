@@ -8,8 +8,8 @@ import com.atguigu.ct.common.bean.Val;
 public enum Names implements Val {
     NAMESPACE("ct")
     ,TABLE("ct:calllog")
-    ,CF_CALLER("caller")
-    ,CF_CALLEE("callee")
+    ,CF_CALLER("caller")//主叫列簇 todo 分列簇存储，提高主叫与被叫数据单独查询的性能
+    ,CF_CALLEE("callee")//被叫列簇
     ,CF_INFO("info")
     ,TOPIC("ct");
 

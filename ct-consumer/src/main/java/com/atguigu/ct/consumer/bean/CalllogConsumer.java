@@ -45,6 +45,7 @@ public class CalllogConsumer implements Consumer {
                     System.out.println(consumerRecord.value());
                     // 插入数据
                     dao.insertData(consumerRecord.value());
+                    // TODO: 2020/5/15 直接插入对象，更通用！
                     //Calllog log = new Calllog(consumerRecord.value());
                     //dao.insertData(log);
                 }

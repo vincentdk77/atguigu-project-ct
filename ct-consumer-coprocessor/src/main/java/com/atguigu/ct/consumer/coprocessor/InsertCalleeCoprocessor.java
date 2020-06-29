@@ -21,7 +21,7 @@ import java.io.IOException;
  * 协处理器的使用
  * 1. 创建类
  * 2. 让表找到协处理类（和表有关联）
- * 3. 将项目打成jar包发布到hbase中（关联的jar包也需要发布），并且需要分发
+ * 3. 将项目打成jar包发布到hbase中（关联的jar包也需要发布 比如ct-common项目,），并且需要分发（每个节点都要有）,且需要重启hbase服务器
  */
 public class InsertCalleeCoprocessor extends BaseRegionObserver {
 
@@ -64,7 +64,7 @@ public class InsertCalleeCoprocessor extends BaseRegionObserver {
         String flg = values[5];
 
         if ( "1".equals(flg) ) {
-            // 只有主叫用户保存后才需要触发被叫用户的保存
+            // 只有主叫用户保存后才需要触发被叫用户的保存，不加判断条件会一直循环执行postPut！最终会报错退出
             String calleeRowkey = dao.getRegionNum(call2, calltime) + "_" + call2 + "_" + calltime + "_" + call1 + "_" + duration + "_0";
 
 

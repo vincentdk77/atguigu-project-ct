@@ -80,7 +80,7 @@ public abstract class BaseDao {
                 new HColumnDescriptor(family);
             tableDescriptor.addFamily(columnDescriptor);
         }
-
+        // TODO: 2020/5/15 创建表的时候添加 协处理器的关联
         if ( coprocessorClass != null && !"".equals(coprocessorClass) ) {
             tableDescriptor.addCoprocessor(coprocessorClass);
         }
@@ -204,6 +204,7 @@ public abstract class BaseDao {
         // 反射
         Class clazz = obj.getClass();
         TableRef tableRef = (TableRef)clazz.getAnnotation(TableRef.class);
+        // TODO: 2020/5/15 对应着 TableRef注解类中的String value();
         String tableName = tableRef.value();
 
         Field[] fs = clazz.getDeclaredFields();
@@ -211,6 +212,7 @@ public abstract class BaseDao {
         for (Field f : fs) {
             Rowkey rowkey = f.getAnnotation(Rowkey.class);
             if ( rowkey != null ) {
+                // TODO: 2020/5/15 这里属性是私有的，必须要加这一步才能取到值 
                 f.setAccessible(true);
                 stringRowkey = (String)f.get(obj);
                 break;

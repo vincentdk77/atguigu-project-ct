@@ -4,9 +4,7 @@ import com.atguigu.ct.common.bean.BaseDao;
 import com.atguigu.ct.common.constant.Names;
 import com.atguigu.ct.common.constant.ValueConstant;
 import com.atguigu.ct.consumer.bean.Calllog;
-import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.ArrayList;
@@ -23,6 +21,7 @@ public class HBaseDao extends BaseDao {
         start();
 
         createNamepsaceNX(Names.NAMESPACE.getValue());
+        // TODO: 2020/5/15 添加协处理器，直接在数据库中运行，提升效率！ 
         createTableXX(Names.TABLE.getValue(), "com.atguigu.ct.consumer.coprocessor.InsertCalleeCoprocessor", ValueConstant.REGION_COUNT, Names.CF_CALLER.getValue(), Names.CF_CALLEE.getValue());
 
         end();
