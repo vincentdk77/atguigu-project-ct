@@ -19,6 +19,7 @@ import java.util.*;
  */
 public abstract class BaseDao {
     // TODO: 2020/5/14  ThreadLocal是什么鬼？有时间参考下谷粒微博项目？
+    // 保证一个线程中的connection 对象只有一个，降低资源消耗
     private ThreadLocal<Connection> connHolder = new ThreadLocal<Connection>();
     private ThreadLocal<Admin> adminHolder = new ThreadLocal<Admin>();
 
@@ -81,6 +82,7 @@ public abstract class BaseDao {
             tableDescriptor.addFamily(columnDescriptor);
         }
         // TODO: 2020/5/15 创建表的时候添加 协处理器的关联
+        //如果是全部表都添加协处理器关联，还要在hbase-site.xml中配置协处理器的类，如果只是指定表建立关联，只需创建表的时候建立关联即可
         if ( coprocessorClass != null && !"".equals(coprocessorClass) ) {
             tableDescriptor.addCoprocessor(coprocessorClass);
         }
@@ -95,19 +97,6 @@ public abstract class BaseDao {
         }
     }
 
-    public static void main(String[] args){
-        for(String[] strings : getStartStorRowkeys("13696321501","201803","201808")){
-            System.out.println(strings[0]+"~"+strings[1]);
-            /**
-             *   3_13696321501_201803~3_13696321501_201803|
-                 2_13696321501_201804~2_13696321501_201804|
-                 5_13696321501_201805~5_13696321501_201805|
-                 4_13696321501_201806~4_13696321501_201806|
-                 5_13696321501_201807~5_13696321501_201807|
-                 4_13696321501_201808~4_13696321501_201808|
-             */
-        }
-    }
     /**
      * 获取查询时startrow, stoprow集合
      * @return
@@ -145,7 +134,7 @@ public abstract class BaseDao {
     }
 
     /**
-     * 计算分区号(0, 1, 2)
+     * 计算分区号(0, 1, 2,...)，也就是分区键的前几位，不包含"|"符号
      * @param tel
      * @param date
      * @return
@@ -171,7 +160,7 @@ public abstract class BaseDao {
     }
 
     /**
-     * 生成分区键
+     * 生成分区键（0|,1|,2|,..）
      * @return
      */
     private byte[][] genSplitKeys(int regionCount) {
@@ -180,12 +169,13 @@ public abstract class BaseDao {
         byte[][] bs = new byte[splitKeyCount][];
         // 0|,1|,2|,3|,4|
         // (-∞, 0|), [0|,1|), [1| +∞)
+        // TODO: 2020/6/29 注意这里二维字节数组的处理方式(先生成List<byte[]>集合，然后把List转成Array即可！)
         List<byte[]> bsList = new ArrayList<byte[]>();
         for ( int i = 0; i < splitKeyCount; i++ ) {
             String splitkey = i + "|";
             bsList.add(Bytes.toBytes(splitkey));
         }
-        // TODO: 2020/5/15 如果分区间不是1、2、3，那就需要先排序 ，可以使用hbase的比较器api
+        // TODO: 2020/5/15 如果分区键不是0、1、2、3，那就需要先排序 ，可以使用hbase的比较器api
          Collections.sort(bsList, new Bytes.ByteArrayComparator());
 
         bsList.toArray(bs);
@@ -202,18 +192,20 @@ public abstract class BaseDao {
     protected void putData(Object obj) throws Exception {
 
         // 反射
+        //1、获取tableName
         Class clazz = obj.getClass();
         TableRef tableRef = (TableRef)clazz.getAnnotation(TableRef.class);
         // TODO: 2020/5/15 对应着 TableRef注解类中的String value();
-        String tableName = tableRef.value();
-
+        String tableName = tableRef.value();//"ct:calllog"
         Field[] fs = clazz.getDeclaredFields();
+        //2、获取rowkey
         String stringRowkey = "";
         for (Field f : fs) {
             Rowkey rowkey = f.getAnnotation(Rowkey.class);
             if ( rowkey != null ) {
                 // TODO: 2020/5/15 这里属性是私有的，必须要加这一步才能取到值 
                 f.setAccessible(true);
+                //由field对象与类对象，获取field的值
                 stringRowkey = (String)f.get(obj);
                 break;
             }
@@ -222,16 +214,19 @@ public abstract class BaseDao {
         Connection conn = getConnection();
         Table table = conn.getTable(TableName.valueOf(tableName));
         Put put = new Put(Bytes.toBytes(stringRowkey));
-
+        //3、获取column
         for (Field f : fs) {
             Column column = f.getAnnotation(Column.class);
             if (column != null) {
+                //3.1 获取列族、列名
                 String family = column.family();
                 String colName = column.column();
                 if ( colName == null || "".equals(colName) ) {
+                    //如果列名没有赋值，就直接拿属性的名称当做列名
                     colName = f.getName();
                 }
                 f.setAccessible(true);
+                //3.2 获取列值
                 String value = (String)f.get(obj);
 
                 put.addColumn(Bytes.toBytes(family), Bytes.toBytes(colName), Bytes.toBytes(value));
@@ -332,12 +327,31 @@ public abstract class BaseDao {
     protected synchronized Connection getConnection() throws Exception {
         Connection conn = connHolder.get();
         if ( conn == null ) {
+            // TODO: 2020/6/29 只要使用 HBaseConfiguration.create() 创建Configuration，就会从hbase-site.xml文件中读取配置
             Configuration conf = HBaseConfiguration.create();
             conn = ConnectionFactory.createConnection(conf);
             connHolder.set(conn);
         }
 
         return conn;
+    }
+
+    public static void main(String[] args){
+//        for(String[] strings : getStartStorRowkeys("13696321501","201803","201808")){
+//            System.out.println(strings[0]+"~"+strings[1]);
+//            /**
+//             *   3_13696321501_201803~3_13696321501_201803|
+//             2_13696321501_201804~2_13696321501_201804|
+//             5_13696321501_201805~5_13696321501_201805|
+//             4_13696321501_201806~4_13696321501_201806|
+//             5_13696321501_201807~5_13696321501_201807|
+//             4_13696321501_201808~4_13696321501_201808|
+//             */
+//        }
+        System.out.println(genRegionNum("13696321501","201804"));
+        System.out.println(genRegionNum("13696321501","201805"));
+        System.out.println(genRegionNum("13692221501","201804"));
+        System.out.println(genRegionNum("13693331501","201804"));
     }
 
 }

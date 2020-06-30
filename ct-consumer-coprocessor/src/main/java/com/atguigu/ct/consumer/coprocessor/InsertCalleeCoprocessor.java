@@ -68,7 +68,7 @@ public class InsertCalleeCoprocessor extends BaseRegionObserver {
             String calleeRowkey = dao.getRegionNum(call2, calltime) + "_" + call2 + "_" + calltime + "_" + call1 + "_" + duration + "_0";
 
 
-            // 保存数据
+            // 保存数据 被叫用户信息保存在不同的rowkey，不同的列族中（提升单独查询的效率，因为hbase按照列族存储，所以被叫用户的region的store的storefile中只有被叫用户的信息）
             Put calleePut = new Put(Bytes.toBytes(calleeRowkey));
             byte[] calleeFamily = Bytes.toBytes(Names.CF_CALLEE.getValue());
             calleePut.addColumn(calleeFamily, Bytes.toBytes("call1"), Bytes.toBytes(call2));

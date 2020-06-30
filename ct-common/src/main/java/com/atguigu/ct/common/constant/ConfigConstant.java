@@ -10,7 +10,8 @@ public class ConfigConstant {
 
     static {
 
-        // 国际化
+        // 国际化  同一个网站，不同国家的人打开显示不同国家的文字
+        // TODO: 2020/6/29 读取配置文件 ct.properties
         ResourceBundle ct = ResourceBundle.getBundle("ct");
         Enumeration<String> enums = ct.getKeys();
         while ( enums.hasMoreElements() ) {
